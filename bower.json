@@ -1,0 +1,14 @@
+{
+  "name": "mg3d",
+  "version": "0.0.0",
+  "authors": [
+    "Aaron Hamilton <aaron@correspondwith.me>"
+  ],
+  "license": "ISC",
+  "ignore": [
+    "bower_components"
+  ],
+  "dependencies": {
+    "threejs": "*"
+  }
+}

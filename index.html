@@ -1,0 +1,70 @@
+<html>
+  <head>
+    <title>Messy WIP Three.JS port of bwhmather's remake of the missile game 3d.</title>
+    <style>
+      body { margin: 0; }
+      canvas { width: 100%; height: 100% }
+    </style>
+  </head>
+  <body>
+    <script id="vertexShader" type="x-shader/x-vertex">
+      varying vec2 euclid;
+
+      void main() {
+        euclid = vec2(position.x, position.y);
+        vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
+        gl_Position = projectionMatrix * mvPosition;
+      }
+    </script>
+    <script id="blankBarrierShader" type="x-shader/x-fragment">
+      varying vec2 euclid;
+
+      uniform float fogDensity;
+      uniform float grey;
+
+      vec3 fogColor = vec3(1.0, 1.0, 1.0);
+
+      float dpoints(vec2 p1, vec2 p2) {
+        return sqrt(square(p1.x - p2.x) +
+                    square(p1.y - p2.y));
+      }
+
+      vec2 circle1 = vec2(0.250, 0.0);
+      vec2 circle2 = vec2(-0.125, 0.2165);
+      vec2 circle3 = vec2(-0.125, -0.2165);
+
+      float dist1 = dpoints(circle1, euclid);
+      float dist2 = dpoints(circle2, euclid);
+      float dist3 = dpoints(circle3, euclid);
+
+      void main() {
+      vec3 color = vec3(grey);
+      float alpha = 1.0;
+      float dzero = sqrt(square(euclid.x) + square(euclid.y));
+
+      if (dzero > 0.5){
+      alpha = 0.0;
+      } else if (dist1 < 0.145 ||
+                 dist2 < 0.145 ||
+                 dist3 < 0.145 ) {
+      alpha = 0.0;
+      } else if (dist1 > 0.145 && dist1 < 0.155 ||
+                 dist2 > 0.145 && dist2 < 0.155 ||
+                 dist3 > 0.145 && dist3 < 0.155) {
+      color = vec3(0.0, 0.0, 0.0);
+      } else if (dzero > 0.490) {
+      color = vec3(0.0, 0.0, 0.0);
+      }
+
+      // Fog
+      float depth = gl_FragCoord.z / gl_FragCoord.w;
+      float fogFactor = exp2( - square(fogDensity) * square(depth) * LOG2 );
+      fogFactor = whiteCompliment(fogFactor);
+
+      gl_FragColor = vec4(mix(color, fogColor, fogFactor), alpha);
+      }
+    </script>
+    <script src="bower_components/threejs/build/three.min.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
