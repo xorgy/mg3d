@@ -3,6 +3,8 @@ var start = Date.now();
 var near = 0.1;
 var dist = 20;
 
+var DRIFT_DAMPING = 0.25;
+
 Math.TAU = Math.PI * 2;
 
 var fogDensity = 0.2;
@@ -27,6 +29,8 @@ window.onresize = function() {
 function absmin(a, b) {
   return Math.abs(a) < Math.abs(b)? a: b;
 }
+
+var controlX = 0, controlY = 0;
 
 window.onmousemove = function(e) {
   function pc(p) {
@@ -72,8 +76,8 @@ window.onmousemove = function(e) {
 
   var euclidean = ec(polar);
 
-  camera.position.x = euclidean[0];
-  camera.position.y = euclidean[1];
+  controlX = euclidean[0];
+  controlY = euclidean[1];
 };
 
 var railsMesh;
@@ -143,7 +147,7 @@ function buildTangentTriangle(grey) {
   var material = new THREE.ShaderMaterial( {
     uniforms: uniforms,
     vertexShader: document.getElementById( 'vertexShader' ).textContent,
-    fragmentShader: THREE.ShaderChunk.common + '\n' + document.getElementById( 'blankBarrierShader' ).textContent,
+    fragmentShader: THREE.ShaderChunk.common + '\n' + document.getElementById( 'barrier2Shader' ).textContent,
     transparent: true
   } );
 
@@ -166,10 +170,14 @@ scene.add( cube );
 
 camera.position.z = dist;
 
+var time = Date.now();
+
 function render() {
   requestAnimationFrame( render );
 
-  var time = Date.now() - start;
+  var ctime = Date.now();
+  var frametime = ctime - time;
+  time = ctime - start;
 
   // If the camera parameters have changed, we should update the projection matrix.
   if(cameraChanged) {
@@ -178,8 +186,10 @@ function render() {
   }
 
   railsMesh.rotation.z = (0.35 * (time / 1000)) % Math.TAU;
-  tangentTriangle.position.z = ((time / 1000) % 1) * dist;
-  tangentTriangle2.position.z = (((time / 1000) % 1) * dist) - 0.05;
+
+
+  tangentTriangle.position.z = (((time / 1000) * 0.5) % 1) * dist;
+  tangentTriangle2.position.z = ((((time / 1000) * 0.5) % 1) * dist) - 0.05;
 
   // Make the camera bob up and down for no particular reason.
   //  camera.position.z = Math.sin(((Date.now() - start) / 100) % Math.TAU) + 4;
@@ -189,11 +199,21 @@ function render() {
 
 render();
 
+var ticklength = 16;
+var currentX = 0, currentY = 0;
+
 function tick() {
   window.setTimeout(tick, 16);
+  var dt = ticklength / 1000;
 
   tangentTriangle.rotation.z += 0.05;
   tangentTriangle2.rotation.z += 0.05;
+
+  currentX += (controlX - currentX) * dt / DRIFT_DAMPING;
+  currentY += (controlY - currentY) * dt / DRIFT_DAMPING;
+
+  camera.position.x = currentX;
+  camera.position.y = currentY;
 }
 
 tick();
