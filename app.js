@@ -122,7 +122,7 @@ function buildRails() {
 
 buildRails();
 
-function buildTangentTriangle(grey) {
+function buildTangentTriangle(grey, t) {
   function ec(p) {
     return [
       p[0] * Math.cos(p[1]),
@@ -147,7 +147,7 @@ function buildTangentTriangle(grey) {
   var material = new THREE.ShaderMaterial( {
     uniforms: uniforms,
     vertexShader: document.getElementById( 'vertexShader' ).textContent,
-    fragmentShader: THREE.ShaderChunk.common + '\n' + document.getElementById( 'barrier2Shader' ).textContent,
+    fragmentShader: THREE.ShaderChunk.common + '\n' + document.getElementById( 'barrier' + t + 'Shader' ).textContent,
     transparent: true
   } );
 
@@ -157,11 +157,27 @@ function buildTangentTriangle(grey) {
   return new THREE.Mesh(geo, material);
 }
 
-var tangentTriangle = buildTangentTriangle(1.0);
-var tangentTriangle2 = buildTangentTriangle(0.6);
+var tangentTriangle = buildTangentTriangle(1.0, 2);
+var tangentTriangle2 = buildTangentTriangle(0.6, 2);
+
+var tangentTriangle3 = buildTangentTriangle(1.0, 'Blank');
+var tangentTriangle4 = buildTangentTriangle(0.6, 'Blank');
+var tangentTriangle5 = buildTangentTriangle(1.0, 'Blank');
+var tangentTriangle6 = buildTangentTriangle(0.6, 'Blank');
+var tangentTriangle7 = buildTangentTriangle(1.0, 'Blank');
+var tangentTriangle8 = buildTangentTriangle(0.6, 'Blank');
+
 
 scene.add(tangentTriangle);
 scene.add(tangentTriangle2);
+
+scene.add(tangentTriangle3);
+scene.add(tangentTriangle4);
+scene.add(tangentTriangle5);
+scene.add(tangentTriangle6);
+scene.add(tangentTriangle7);
+scene.add(tangentTriangle8);
+
 
 var geometry = new THREE.BoxGeometry( 0.5, 0.5, 0.5 );
 var material = new THREE.MeshBasicMaterial( { color: 0x422D3F } );
@@ -190,6 +206,14 @@ function render() {
 
   tangentTriangle.position.z = (((time / 1000) * 0.5) % 1) * dist;
   tangentTriangle2.position.z = ((((time / 1000) * 0.5) % 1) * dist) - 0.05;
+
+  tangentTriangle3.position.z = ((((time - 500) / 1000) * 0.5) % 1) * dist;
+  tangentTriangle4.position.z = (((((time - 500) / 1000) * 0.5) % 1) * dist) - 0.05;
+  tangentTriangle5.position.z = ((((time - 1000) / 1000) * 0.5) % 1) * dist;
+  tangentTriangle6.position.z = (((((time - 1000) / 1000) * 0.5) % 1) * dist) - 0.05;
+  tangentTriangle7.position.z = ((((time - 1500) / 1000) * 0.5) % 1) * dist;
+  tangentTriangle8.position.z = (((((time - 1500) / 1000) * 0.5) % 1) * dist) - 0.05;
+
 
   // Make the camera bob up and down for no particular reason.
   //  camera.position.z = Math.sin(((Date.now() - start) / 100) % Math.TAU) + 4;

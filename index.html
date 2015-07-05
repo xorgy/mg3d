@@ -17,6 +17,35 @@
         gl_Position = projectionMatrix * mvPosition;
       }
     </script>
+    <script id="barrierBlankShader" type="x-shader/x-fragment">
+      varying vec2 euclid;
+
+      uniform float fogDensity;
+      uniform float grey;
+
+      vec3 fogColor = vec3(1.0, 1.0, 1.0);
+
+      void main() {
+      vec3 color = vec3(grey);
+      float alpha = 1.0;
+      float dzero = sqrt(square(euclid.x) + square(euclid.y));
+
+      if (dzero > 0.5 || dzero < 0.445){
+      alpha = 0.0;
+      } else if (dzero > 0.445 && dzero < 0.455) {
+      color = vec3(0.0, 0.0, 0.0);
+      } else if (dzero > 0.490) {
+      color = vec3(0.0, 0.0, 0.0);
+      }
+
+      // Fog
+      float depth = gl_FragCoord.z / gl_FragCoord.w;
+      float fogFactor = exp2( - square(fogDensity) * square(depth) * LOG2 );
+      fogFactor = whiteCompliment(fogFactor);
+
+      gl_FragColor = vec4(mix(color, fogColor, fogFactor), alpha);
+      }
+    </script>
     <script id="barrier2Shader" type="x-shader/x-fragment">
       varying vec2 euclid;
 
