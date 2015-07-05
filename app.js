@@ -43,10 +43,30 @@ window.onmousemove = function(e) {
     ];
   }
 
-  var relx = (e.pageX / window.innerWidth) - 0.5;
-  var rely = -((e.pageY / window.innerHeight) - 0.5);
+  function clamp(min, max, v) {
+    return v > max? max: v < min? min: v;
+  }
 
-  var polar = pc([relx, rely]);
+  var eX, eY, min, max;
+
+  if(window.innerWidth >= window.innerHeight) {
+    min = (window.innerWidth - window.innerHeight) / 2;
+    max = window.innerHeight;
+
+    eX = clamp(min,min + max, e.pageX) - min;
+    eY = e.pageY;
+  } else {
+    min = (window.innerHeight - window.innerWidth) / 2;
+    max = window.innerWidth;
+
+    eY = clamp(min, min + max, e.pageY) - min;
+    eX = e.pageX;
+  }
+
+  var relx = (eX / max) - 0.5;
+  var rely = -((eY / max) - 0.5);
+
+  var polar = pc([relx * 2, rely * 2]);
 
   polar[0] = absmin(polar[0], 0.45);
 
