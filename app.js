@@ -186,4 +186,14 @@ function render() {
 
   renderer.render( scene, camera );
 }
+
 render();
+
+function tick() {
+  window.setTimeout(tick, 16);
+
+  tangentTriangle.rotation.z += 0.05;
+  tangentTriangle2.rotation.z += 0.05;
+}
+
+tick();
