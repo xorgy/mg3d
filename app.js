@@ -162,8 +162,10 @@ var tangentTriangle2 = buildTangentTriangle(0.6, 2);
 
 var tangentTriangle3 = buildTangentTriangle(1.0, 'Blank');
 var tangentTriangle4 = buildTangentTriangle(0.6, 'Blank');
-var tangentTriangle5 = buildTangentTriangle(1.0, 'Blank');
-var tangentTriangle6 = buildTangentTriangle(0.6, 'Blank');
+
+var tangentTriangle5 = buildTangentTriangle(1.0, 1);
+var tangentTriangle6 = buildTangentTriangle(0.6, 1);
+
 var tangentTriangle7 = buildTangentTriangle(1.0, 'Blank');
 var tangentTriangle8 = buildTangentTriangle(0.6, 'Blank');
 
@@ -232,6 +234,9 @@ function tick() {
 
   tangentTriangle.rotation.z += 0.05;
   tangentTriangle2.rotation.z += 0.05;
+
+  tangentTriangle5.rotation.z -= 0.02;
+  tangentTriangle6.rotation.z -= 0.02;
 
   currentX += (controlX - currentX) * dt / DRIFT_DAMPING;
   currentY += (controlY - currentY) * dt / DRIFT_DAMPING;
