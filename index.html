@@ -10,131 +10,105 @@
   <body>
     <script id="vertexShader" type="x-shader/x-vertex">
       varying vec2 euclid;
-
+      varying float pixSizeFinal;
+      uniform float pixSize;
       void main() {
         euclid = vec2(position.x, position.y);
         vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
         gl_Position = projectionMatrix * mvPosition;
+        pixSizeFinal = pixSize * (gl_Position.z);
       }
+    </script>
+    <script id="barrierShaderBase" type="x-shader/x-fragment">
+varying highp vec2 euclid;
+varying highp float pixSizeFinal;
+uniform highp float fogDensity;
+uniform highp float grey;
+
+float signedDistance( const vec2 coord);
+
+float sdfCircle( const vec2 c, const float r, const vec2 coord ) {
+  vec2 offset = coord - c;
+
+  return sqrt((offset.x * offset.x) + (offset.y * offset.y)) - r;
+}
+
+float sdfUnion( const float a, const float b ) {
+  return min(a, b);
+}
+
+float sdfDifference( const float a, const float b) {
+  return max(a, -b);
+}
+
+float sdfIntersection( const float a, const float b ) {
+  return max(a, b);
+}
+
+vec2 render( const float distance, const float pixSizeFinal, const float strokeWidth, const float gamma, const float grey) {
+  float halfStroke = strokeWidth * 0.5;
+  float halfGamma = gamma * 0.5;
+
+  if (distance < -halfStroke + pixSizeFinal) {
+    float factor = smoothstep(-halfStroke - pixSizeFinal, -halfStroke + pixSizeFinal, distance);
+    return vec2(mix(grey, 0.0, factor * halfGamma), 1.0);
+  } else if (distance <= halfStroke - pixSizeFinal) {
+    return vec2(0.0, 1.0);
+  } else {
+    float factor = smoothstep(halfStroke - pixSizeFinal, halfStroke + pixSizeFinal, distance);
+    return vec2(0.0, 1.0 - factor * halfGamma);
+  }
+}
+
+void main() {
+  float d = signedDistance(euclid);
+  vec2 sample = render(d, pixSizeFinal, 0.010, 2.2, grey);
+  float zw = gl_FragCoord.z / gl_FragCoord.w;
+  gl_FragColor.xyz = vec3(
+    mix(sample.x, 1.0,
+        clamp(
+          (1.0 - exp2(
+            ((-((fogDensity * fogDensity)) * (zw * zw))
+             * 1.442695))),
+          0.0, 1.0)));
+  gl_FragColor.w = sample.y;
+}
     </script>
     <script id="barrierBlankShader" type="x-shader/x-fragment">
-      varying vec2 euclid;
-
-      uniform float fogDensity;
-      uniform float grey;
-
-      vec3 fogColor = vec3(1.0, 1.0, 1.0);
-
-      void main() {
-      vec3 color = vec3(grey);
-      float alpha = 1.0;
-      float dzero = sqrt(square(euclid.x) + square(euclid.y));
-
-      if (dzero > 0.5 || dzero < 0.445){
-      alpha = 0.0;
-      } else if (dzero > 0.445 && dzero < 0.455) {
-      color = vec3(0.0, 0.0, 0.0);
-      } else if (dzero > 0.490) {
-      color = vec3(0.0, 0.0, 0.0);
-      }
-
-      // Fog
-      float depth = gl_FragCoord.z / gl_FragCoord.w;
-      float fogFactor = exp2( - square(fogDensity) * square(depth) * LOG2 );
-      fogFactor = whiteCompliment(fogFactor);
-
-      gl_FragColor = vec4(mix(color, fogColor, fogFactor), alpha);
-      }
+float signedDistance( const vec2 coord ) {
+  float a = sdfCircle(vec2(0.0), 0.495 - pixSizeFinal, coord);
+  float b = sdfCircle(vec2(0.0), 0.45, coord);
+  float final = sdfDifference(a, b);
+  return final;
+}
     </script>
     <script id="barrier1Shader" type="x-shader/x-fragment">
-      varying vec2 euclid;
-
-      uniform float fogDensity;
-      uniform float grey;
-
-      vec3 fogColor = vec3(1.0, 1.0, 1.0);
-
-      void main() {
-      vec3 color = vec3(grey);
-      float alpha = 1.0;
-      float dzero = sqrt(square(euclid.x) + square(euclid.y));
-
-      if (dzero > 0.5){
-        alpha = 0.0;
-      } else if (dzero > 0.490) {
-        color = vec3(0.0, 0.0, 0.0);
-      } else if(dzero > 0.455) {
-      } else if(euclid.x > 0.005 && euclid.y < -0.005) {
-        if (dzero > 0.445 && dzero < 0.455) {
-          color = vec3(0.0, 0.0, 0.0);
-        } else {
-          alpha = 0.0;
-        }
-      } else if(dzero > 0.145 && dzero < 0.155) {
-        color = vec3(0.0, 0.0, 0.0);
-      } else if(dzero < 0.145) {
-        alpha = 0.0;
-      } else if (euclid.x <  0.005 && euclid.x > -0.005 && euclid.y <  0.005 ||
-                 euclid.y > -0.005 && euclid.y <  0.005 && euclid.x > -0.005) {
-        color = vec3(0.0, 0.0, 0.0);
-      }
-
-
-      // Fog
-      float depth = gl_FragCoord.z / gl_FragCoord.w;
-      float fogFactor = exp2( - square(fogDensity) * square(depth) * LOG2 );
-      fogFactor = whiteCompliment(fogFactor);
-
-      gl_FragColor = vec4(mix(color, fogColor, fogFactor), alpha);
-      }
+float signedDistance( const vec2 coord )
+{
+  float a = sdfCircle(vec2(0.0), 0.5, coord);
+  float b = sdfCircle(vec2(0.0), 0.45, coord);
+  float ring = sdfDifference(a, b);
+  float upperleft = sdfUnion(-coord.y, coord.x);
+  float nixhole = sdfDifference(upperleft, sdfCircle(vec2(0.0), 0.15, coord));
+  float addring = sdfUnion(nixhole, ring);
+  float final = sdfIntersection(a, addring);
+  return final;
+}
     </script>
     <script id="barrier2Shader" type="x-shader/x-fragment">
-      varying vec2 euclid;
-
-      uniform float fogDensity;
-      uniform float grey;
-
-      vec3 fogColor = vec3(1.0, 1.0, 1.0);
-
-      float dpoints(vec2 p1, vec2 p2) {
-        return sqrt(square(p1.x - p2.x) +
-                    square(p1.y - p2.y));
-      }
-
-      vec2 circle1 = vec2(0.250, 0.0);
-      vec2 circle2 = vec2(-0.125, 0.2165);
-      vec2 circle3 = vec2(-0.125, -0.2165);
-
-      float dist1 = dpoints(circle1, euclid);
-      float dist2 = dpoints(circle2, euclid);
-      float dist3 = dpoints(circle3, euclid);
-
-      void main() {
-      vec3 color = vec3(grey);
-      float alpha = 1.0;
-      float dzero = sqrt(square(euclid.x) + square(euclid.y));
-
-      if (dzero > 0.5){
-      alpha = 0.0;
-      } else if (dist1 < 0.145 ||
-                 dist2 < 0.145 ||
-                 dist3 < 0.145 ) {
-      alpha = 0.0;
-      } else if (dist1 > 0.145 && dist1 < 0.155 ||
-                 dist2 > 0.145 && dist2 < 0.155 ||
-                 dist3 > 0.145 && dist3 < 0.155) {
-      color = vec3(0.0, 0.0, 0.0);
-      } else if (dzero > 0.490) {
-      color = vec3(0.0, 0.0, 0.0);
-      }
-
-      // Fog
-      float depth = gl_FragCoord.z / gl_FragCoord.w;
-      float fogFactor = exp2( - square(fogDensity) * square(depth) * LOG2 );
-      fogFactor = whiteCompliment(fogFactor);
-
-      gl_FragColor = vec4(mix(color, fogColor, fogFactor), alpha);
-      }
+float signedDistance( const vec2 coord ) {
+  vec2 circle1 = vec2(0.250, 0.0);
+  vec2 circle2 = vec2(-0.125, 0.2165);
+  vec2 circle3 = vec2(-0.125, -0.2165);
+  float a = sdfCircle(vec2(0.0), 0.5, coord);
+  float c1 = sdfCircle(circle1, 0.15, coord);
+  float c2 = sdfCircle(circle2, 0.15, coord);
+  float c3 = sdfCircle(circle3, 0.15, coord);
+  float circles12 = sdfUnion(c1, c2);
+  float circles = sdfUnion(circles12, c3);
+  float final = sdfDifference(a, circles);
+  return final;
+}
     </script>
     <script src="bower_components/threejs/build/three.min.js"></script>
     <script src="app.js"></script>

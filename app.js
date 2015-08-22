@@ -3,6 +3,12 @@ var start = Date.now();
 var near = 0.1;
 var dist = 20;
 
+function calculatePixSizeUniform () {
+  return { type: "f", value: 1.0 / Math.min(window.innerWidth, window.innerHeight)};
+}
+
+var pixSizeUniform = calculatePixSizeUniform();
+
 var DRIFT_DAMPING = 0.25;
 
 Math.TAU = Math.PI * 2;
@@ -21,6 +27,7 @@ renderer.setSize( window.innerWidth, window.innerHeight );
 document.body.appendChild( renderer.domElement );
 
 window.onresize = function() {
+  pixSizeUniform = calculatePixSizeUniform();
   renderer.setSize( window.innerWidth, window.innerHeight );
   camera.aspect = window.innerWidth / window.innerHeight;
   cameraChanged = true;
@@ -47,7 +54,7 @@ window.onmousemove = function(e) {
     ];
   }
 
-  function clamp(min, max, v) {
+  function clamp(v, min, max) {
     return v > max? max: v < min? min: v;
   }
 
@@ -57,13 +64,13 @@ window.onmousemove = function(e) {
     min = (window.innerWidth - window.innerHeight) / 2;
     max = window.innerHeight;
 
-    eX = clamp(min,min + max, e.pageX) - min;
+    eX = clamp(e.pageX, min,min + max) - min;
     eY = e.pageY;
   } else {
     min = (window.innerHeight - window.innerWidth) / 2;
     max = window.innerWidth;
 
-    eY = clamp(min, min + max, e.pageY) - min;
+    eY = clamp(e.pageY, min, min + max) - min;
     eX = e.pageX;
   }
 
@@ -123,17 +130,11 @@ function buildRails() {
 buildRails();
 
 function buildTangentTriangle(grey, t) {
-  function ec(p) {
-    return [
-      p[0] * Math.cos(p[1]),
-      p[0] * Math.sin(p[1])
-    ];
-  }
   var geom = new THREE.Geometry();
 
-  geom.vertices.push(new THREE.Vector3(0, 1, near));
-  geom.vertices.push(new THREE.Vector3(-0.8660254037844384, -0.5, near));
-  geom.vertices.push(new THREE.Vector3(0.8660254037844384, -0.5 , near));
+  geom.vertices.push(new THREE.Vector3(0, 1.1, 0));
+  geom.vertices.push(new THREE.Vector3(-0.9526279441628827, -0.55, 0));
+  geom.vertices.push(new THREE.Vector3(0.9526279441628827, -0.55, 0));
   geom.faces.push(new THREE.Face3(0, 1, 2));
 
   // material
@@ -141,13 +142,15 @@ function buildTangentTriangle(grey, t) {
 
   var uniforms = {
     fogDensity:  { type: "f", value: fogDensity },
-    grey:        { type: "f", value: grey  }
+    grey:        { type: "f", value: grey  },
+    pixSize: pixSizeUniform
   };
 
   var material = new THREE.ShaderMaterial( {
     uniforms: uniforms,
     vertexShader: document.getElementById( 'vertexShader' ).textContent,
-    fragmentShader: THREE.ShaderChunk.common + '\n' + document.getElementById( 'barrier' + t + 'Shader' ).textContent,
+    fragmentShader: document.getElementById('barrierShaderBase').textContent +
+      document.getElementById( 'barrier' + t + 'Shader' ).textContent,
     transparent: true
   } );
 
