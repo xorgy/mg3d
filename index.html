@@ -30,6 +30,13 @@ uniform highp float grey;
 
 float signedDistance( const vec2 coord);
 
+float sdfLine(vec2 a, vec2 b, vec2 coord) {
+  vec2 ld = b - a;
+  vec2 pd = vec2(ld.y, -ld.x);
+  vec2 dp = a - coord;
+  return dot(normalize(pd), dp);
+}
+
 float sdfCircle( const vec2 c, const float r, const vec2 coord ) {
   vec2 offset = coord - c;
 
@@ -124,7 +131,19 @@ float signedDistance( const vec2 coord ) {
   return final;
 }
     </script>
-
+    <script id="barrier4Shader" type="x-shader/x-fragment">
+float signedDistance( const vec2 coord ) {
+  float a = sdfCircle(vec2(0.0), 0.5, coord);
+  float b = sdfCircle(vec2(0.0), 0.45, coord);
+  float slopeline = sdfLine(vec2(0.0), vec2(0.154, 0.423), coord);
+  float quadrants = sdfIntersection(slopeline, coord.y);
+  float hole = sdfIntersection(quadrants, b);
+  float cut = sdfDifference(a, hole);
+  float circle = sdfCircle(vec2(0.0), 0.15, coord);
+  float final = sdfUnion(circle, cut);
+  return final;
+}
+    </script>
     <script src="bower_components/threejs/build/three.min.js"></script>
     <script src="app.js"></script>
   </body>
