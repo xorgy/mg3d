@@ -38,26 +38,25 @@ function absmin(a, b) {
 }
 
 var controlX = 0, controlY = 0;
+function pc(p) {
+  return [
+    Math.sqrt(Math.pow(p[0], 2) + Math.pow(p[1], 2)),
+    Math.atan2(p[1], p[0])
+  ];
+}
+
+function ec(p) {
+  return [
+    p[0] * Math.cos(p[1]),
+    p[0] * Math.sin(p[1])
+  ];
+}
+
+function clamp(v, min, max) {
+  return v > max? max: v < min? min: v;
+}
 
 window.onmousemove = function(e) {
-  function pc(p) {
-    return [
-      Math.sqrt(Math.pow(p[0], 2) + Math.pow(p[1], 2)),
-      Math.atan2(p[1], p[0])
-    ];
-  }
-
-  function ec(p) {
-    return [
-      p[0] * Math.cos(p[1]),
-      p[0] * Math.sin(p[1])
-    ];
-  }
-
-  function clamp(v, min, max) {
-    return v > max? max: v < min? min: v;
-  }
-
   var eX, eY, min, max;
 
   if(window.innerWidth >= window.innerHeight) {
@@ -132,13 +131,26 @@ buildRails();
 function buildTangentTriangle(grey, t) {
   var geom = new THREE.Geometry();
 
-  geom.vertices.push(new THREE.Vector3(0, 1.1, 0));
-  geom.vertices.push(new THREE.Vector3(-0.9526279441628827, -0.55, 0));
-  geom.vertices.push(new THREE.Vector3(0.9526279441628827, -0.55, 0));
-  geom.faces.push(new THREE.Face3(0, 1, 2));
+  var nverts = 8;
+  var tmpc;
+  var wind = [];
+  for(var i = 0; i <= nverts; i++) {
+    tmpc = ec([0.5368 + 0.010, (Math.PI * 2) * (i/nverts)]);
+    geom.vertices.push(new THREE.Vector3(tmpc[0], tmpc[1], 0));
+    wind.push(i);
+  }
 
-  // material
-  var mat = new THREE.MeshBasicMaterial({color: 0x422D3F, side: THREE.FrontSide});
+  var lead;
+  var loss;
+  while (wind.length > 3) {
+    lead = wind.pop();
+    loss = wind.pop();
+    geom.faces.push(new THREE.Face3(wind[wind.length - 1],
+                                    loss,
+                                    lead));
+    wind.push(lead);
+  }
+  geom.faces.push(new THREE.Face3(wind[2], wind[1], wind[0]));
 
   var uniforms = {
     fogDensity:  { type: "f", value: fogDensity },

@@ -62,7 +62,7 @@ vec2 render( const float distance, const float pixSizeFinal, const float strokeW
 
 void main() {
   float d = signedDistance(euclid);
-  vec2 sample = render(d, pixSizeFinal, 0.010, 2.2, grey);
+  vec2 sample = render(d, pixSizeFinal, 0.010, float(GAMMA_FACTOR), grey);
   float zw = gl_FragCoord.z / gl_FragCoord.w;
   gl_FragColor.xyz = vec3(
     mix(sample.x, 1.0,
@@ -72,6 +72,7 @@ void main() {
              * 1.442695))),
           0.0, 1.0)));
   gl_FragColor.w = sample.y;
+
 }
     </script>
     <script id="barrierBlankShader" type="x-shader/x-fragment">
