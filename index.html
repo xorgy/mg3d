@@ -11,17 +11,20 @@
     <script id="vertexShader" type="x-shader/x-vertex">
       varying vec2 euclid;
       varying float pixSizeFinal;
+      varying float fade;
       uniform float pixSize;
       void main() {
         euclid = vec2(position.x, position.y);
         vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
         gl_Position = projectionMatrix * mvPosition;
-        pixSizeFinal = pixSize * (gl_Position.z);
+        pixSizeFinal = pixSize * gl_Position.z;
+        fade = smoothstep(0.01, 0.2, gl_Position.z);
       }
     </script>
     <script id="barrierShaderBase" type="x-shader/x-fragment">
 varying highp vec2 euclid;
 varying highp float pixSizeFinal;
+varying highp float fade;
 uniform highp float fogDensity;
 uniform highp float grey;
 
@@ -71,7 +74,7 @@ void main() {
             ((-((fogDensity * fogDensity)) * (zw * zw))
              * 1.442695))),
           0.0, 1.0)));
-  gl_FragColor.w = sample.y;
+  gl_FragColor.w = sample.y * fade;
 }
     </script>
     <script id="barrierBlankShader" type="x-shader/x-fragment">
@@ -83,33 +86,45 @@ float signedDistance( const vec2 coord ) {
 }
     </script>
     <script id="barrier1Shader" type="x-shader/x-fragment">
-float signedDistance( const vec2 coord )
-{
+float signedDistance( const vec2 coord ) {
   float a = sdfCircle(vec2(0.0), 0.5, coord);
   float b = sdfCircle(vec2(0.0), 0.45, coord);
   float ring = sdfDifference(a, b);
-  float upperleft = sdfUnion(-coord.y, coord.x);
-  float nixhole = sdfDifference(upperleft, sdfCircle(vec2(0.0), 0.15, coord));
-  float addring = sdfUnion(nixhole, ring);
+  float upperRight = sdfIntersection(-coord.y, -coord.x);
+  float lowerLeft  = sdfIntersection( coord.y,  coord.x);
+  float quadrants = sdfUnion(lowerLeft, upperRight);
+  float circle = sdfCircle(vec2(0.0), 0.15, coord);
+  float addcircle = sdfUnion(quadrants, circle);
+  float addring = sdfUnion(addcircle, ring);
   float final = sdfIntersection(a, addring);
   return final;
 }
     </script>
     <script id="barrier2Shader" type="x-shader/x-fragment">
 float signedDistance( const vec2 coord ) {
-  vec2 circle1 = vec2(0.250, 0.0);
-  vec2 circle2 = vec2(-0.125, 0.2165);
-  vec2 circle3 = vec2(-0.125, -0.2165);
   float a = sdfCircle(vec2(0.0), 0.5, coord);
-  float c1 = sdfCircle(circle1, 0.15, coord);
-  float c2 = sdfCircle(circle2, 0.15, coord);
-  float c3 = sdfCircle(circle3, 0.15, coord);
+  float c1 = sdfCircle(vec2(0.250, 0.0), 0.15, coord);
+  float c2 = sdfCircle(vec2(-0.125, 0.2165), 0.15, coord);
+  float c3 = sdfCircle(vec2(-0.125, -0.2165), 0.15, coord);
   float circles12 = sdfUnion(c1, c2);
   float circles = sdfUnion(circles12, c3);
   float final = sdfDifference(a, circles);
   return final;
 }
     </script>
+    <script id="barrier3Shader" type="x-shader/x-fragment">
+float signedDistance( const vec2 coord ) {
+  float a = sdfCircle(vec2(0.0), 0.5, coord);
+  float b = sdfCircle(vec2(0.0), 0.45, coord);
+  float ring = sdfDifference(a, b);
+  float lowerright = sdfUnion(coord.y, -coord.x);
+  float nixhole = sdfDifference(lowerright, sdfCircle(vec2(0.0), 0.15, coord));
+  float addring = sdfUnion(nixhole, ring);
+  float final = sdfIntersection(a, addring);
+  return final;
+}
+    </script>
+
     <script src="bower_components/threejs/build/three.min.js"></script>
     <script src="app.js"></script>
   </body>

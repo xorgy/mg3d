@@ -130,7 +130,7 @@ buildRails();
 function buildTangentTriangle(grey, t) {
   var geom = new THREE.Geometry();
 
-  var nverts = 8;
+  var nverts = 16;
   var tmpc;
   var wind = [];
   for(var i = 0; i < nverts; i++) {
@@ -183,11 +183,11 @@ var tangentTriangle2 = buildTangentTriangle(0.6, 2);
 var tangentTriangle3 = buildTangentTriangle(1.0, 'Blank');
 var tangentTriangle4 = buildTangentTriangle(0.6, 'Blank');
 
-var tangentTriangle5 = buildTangentTriangle(1.0, 1);
-var tangentTriangle6 = buildTangentTriangle(0.6, 1);
+var tangentTriangle5 = buildTangentTriangle(1.0, 3);
+var tangentTriangle6 = buildTangentTriangle(0.6, 3);
 
-var tangentTriangle7 = buildTangentTriangle(1.0, 'Blank');
-var tangentTriangle8 = buildTangentTriangle(0.6, 'Blank');
+var tangentTriangle7 = buildTangentTriangle(1.0, 1);
+var tangentTriangle8 = buildTangentTriangle(0.6, 1);
 
 
 scene.add(tangentTriangle);
@@ -257,6 +257,9 @@ function tick() {
 
   tangentTriangle5.rotation.z -= 0.02;
   tangentTriangle6.rotation.z -= 0.02;
+
+  tangentTriangle7.rotation.z -= -0.03;
+  tangentTriangle8.rotation.z -= -0.03;
 
   currentX += (controlX - currentX) * dt / DRIFT_DAMPING;
   currentY += (controlY - currentY) * dt / DRIFT_DAMPING;
