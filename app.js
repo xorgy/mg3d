@@ -125,7 +125,6 @@ function buildRails() {
   railsMesh = mesh;
   scene.add(railsMesh);
 }
-
 buildRails();
 
 function buildTangentTriangle(grey, t) {
@@ -134,23 +133,29 @@ function buildTangentTriangle(grey, t) {
   var nverts = 8;
   var tmpc;
   var wind = [];
-  for(var i = 0; i <= nverts; i++) {
+  for(var i = 0; i < nverts; i++) {
     tmpc = ec([0.5368 + 0.010, (Math.PI * 2) * (i/nverts)]);
     geom.vertices.push(new THREE.Vector3(tmpc[0], tmpc[1], 0));
     wind.push(i);
   }
 
+  wind = wind.concat([0]).reverse();
+
+  var leads = [];
   var lead;
   var loss;
-  while (wind.length > 3) {
-    lead = wind.pop();
-    loss = wind.pop();
-    geom.faces.push(new THREE.Face3(wind[wind.length - 1],
-                                    loss,
-                                    lead));
-    wind.push(lead);
-  }
-  geom.faces.push(new THREE.Face3(wind[2], wind[1], wind[0]));
+  window.faces = [];
+  do {
+    while (wind.length >= 3) {
+      lead = wind.pop();
+      loss = wind.pop();
+      geom.faces.push(new THREE.Face3(lead, loss, wind[wind.length - 1]));
+      window.faces.push([lead, loss, wind[wind.length - 1]]);
+      leads.push(lead);
+    }
+    wind = wind.concat(leads.reverse());
+    leads = new Array();
+  } while (wind.length > 3)
 
   var uniforms = {
     fogDensity:  { type: "f", value: fogDensity },
