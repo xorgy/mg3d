@@ -186,8 +186,8 @@ var tangentTriangle4 = buildTangentTriangle(0.6, 4);
 var tangentTriangle5 = buildTangentTriangle(1.0, 3);
 var tangentTriangle6 = buildTangentTriangle(0.6, 3);
 
-var tangentTriangle7 = buildTangentTriangle(1.0, 1);
-var tangentTriangle8 = buildTangentTriangle(0.6, 1);
+var tangentTriangle7 = buildTangentTriangle(1.0, 6);
+var tangentTriangle8 = buildTangentTriangle(0.6, 6);
 
 
 scene.add(tangentTriangle);

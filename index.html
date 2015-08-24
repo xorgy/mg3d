@@ -144,6 +144,31 @@ float signedDistance( const vec2 coord ) {
   return final;
 }
     </script>
+    <script id="barrier5Shader" type="x-shader/x-fragment">
+float signedDistance( const vec2 coord ) {
+    vec2 absc = abs(coord);
+    float a = sdfCircle(vec2(0.0), 0.5, absc);
+    float b = sdfCircle(vec2(0.0), 0.45, absc);
+    float ring = sdfDifference(a, b);
+    float line = absc.x - 0.225;
+    float circle = sdfCircle(vec2(0.40796, 0.0), 0.29, absc);
+    float takecircle = sdfIntersection(-circle, line);
+    float addring = sdfUnion(takecircle, ring);
+    float final = sdfIntersection(a, addring);
+    return final;
+}
+    </script>
+    <script id="barrier6Shader" type="x-shader/x-fragment">
+float signedDistance( const vec2 coord ) {
+    vec2 absc = abs(coord);
+    float a = sdfCircle(vec2(0.0), 0.5, absc);
+    float linex = absc.x - 0.4;
+    float liney = absc.y - 0.125;
+    float rect = sdfIntersection(linex, liney);
+    float final = sdfDifference(a, rect);
+    return final;
+}
+    </script>
     <script src="bower_components/threejs/build/three.min.js"></script>
     <script src="app.js"></script>
   </body>
